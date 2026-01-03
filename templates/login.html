@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ВКонтакте</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="layout">
+        <main class="basis__content">
+            <div class="pcont">
+                <div class="PageBlock">
+                    <form method="POST" class="form_item">
+                        <h1 class="login_header">Войдите на сайт</h1>
+                        <div class="fi_row">
+                            <input type="text" class="textfield" name="email" placeholder="Телефон или почта" required>
+                        </div>
+                        <div class="fi_row">
+                            <input type="password" class="textfield" name="pass" placeholder="Пароль" required>
+                        </div>
+                        <button type="submit" class="button">Войти</button>
+                        <div class="near_btn">
+                            <a href="#" class="login_restore">Забыли пароль?</a>
+                        </div>
+                        <div class="login_new_user">Первый раз на ВК?</div>
+                        <a href="#" class="button success">Зарегистрироваться</a>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
