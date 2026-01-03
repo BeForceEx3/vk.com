@@ -1,9 +1,0 @@
-bind = "0.0.0.0:10000"
-workers = 2
-worker_class = "sync"
-worker_tmp_dir = "/dev/shm"
-accesslog = "-"
-errorlog = "-"
-loglevel = "info"
-timeout = 120
-keepalive = 2
