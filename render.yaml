@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: vk-login
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app --config gunicorn.conf.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.2
