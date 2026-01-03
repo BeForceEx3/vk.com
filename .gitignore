@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+/tmp/
+.env
+vk.log
+vk_creds.txt
